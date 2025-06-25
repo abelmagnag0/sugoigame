@@ -58,7 +58,7 @@ if (! $pers) {
                         }); ?>
                         <td class="border-none">
                             <?php foreach ($habilidades_lvl as $index => $habilidade) : ?>
-                                <?php $habilidade = array_merge($habilidade, $aprendidas[$habilidade["cod"]] ?: []) ?>
+                                <?php $habilidade = array_merge($habilidade, $aprendidas[$habilidade["cod"]] ?? []) ?>
                                 <div>
                                     <?= Componentes::render("Habilidades.Icone", ["habilidade" => $habilidade]) ?>
                                 </div>

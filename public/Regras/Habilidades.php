@@ -116,16 +116,16 @@ class Habilidades
     }
     public static function habilidade_default_values($habilidade)
     {
-        $habilidade["icone"] = $habilidade["icone"] ?: 1;
-        $habilidade["animacao"] = $habilidade["animacao"] ?: "Atingir fisicamente";
+        $habilidade["icone"] = $habilidade["icone"] ?? 1;
+        $habilidade["animacao"] = $habilidade["animacao"] ?? "Atingir fisicamente";
         $habilidade["dano"] = isset($habilidade["dano"]) ? $habilidade["dano"] : 1;
-        $habilidade["filtro_dano"] = $habilidade["filtro_dano"] ?: self::FILTRO_ALVO_INIMIGO;
-        $habilidade["alcance"] = $habilidade["alcance"] ?: 1;
-        $habilidade["area"] = $habilidade["area"] ?: 1;
-        $habilidade["vontade"] = $habilidade["vontade"] ?: 1;
-        $habilidade["recarga"] = $habilidade["recarga"] ?: 0;
-        $habilidade["recarga_universal"] = $habilidade["recarga_universal"] ?: false;
-        $habilidade["requisito_lvl"] = $habilidade["requisito_lvl"] ?: 1;
+        $habilidade["filtro_dano"] = $habilidade["filtro_dano"] ?? self::FILTRO_ALVO_INIMIGO;
+        $habilidade["alcance"] = $habilidade["alcance"] ?? 1;
+        $habilidade["area"] = $habilidade["area"] ?? 1;
+        $habilidade["vontade"] = $habilidade["vontade"] ?? 1;
+        $habilidade["recarga"] = $habilidade["recarga"] ?? 0;
+        $habilidade["recarga_universal"] = $habilidade["recarga_universal"] ?? false;
+        $habilidade["requisito_lvl"] = $habilidade["requisito_lvl"] ?? 1;
 
 
         if (isset($habilidade["efeitos"])) {
@@ -155,16 +155,18 @@ class Habilidades
 
     public static function efeito_default_values($habilidade, $efeito, $tipo_alvo_padrao = TIPO_ALVO_EFEITO_ATACANTE)
     {
-        $efeito["tipo"] = $efeito["tipo"] ?: TIPO_EFEITO_POSITIVO;
-        $efeito["filtro_alvo"] = $efeito["filtro_alvo"] ?: self::FILTRO_ALVO_TODOS;
-        $efeito["tipo_alvo"] = $efeito["tipo_alvo"] ?: $tipo_alvo_padrao;
-        $efeito["quant_alvo"] = $efeito["quant_alvo"] ?: 1;
-        $efeito["explicacao"] = $efeito["explicacao"] ?: $habilidade["explicacao"];
+        $efeito["tipo"] = $efeito["tipo"] ?? TIPO_EFEITO_POSITIVO;
+        $efeito["filtro_alvo"] = $efeito["filtro_alvo"] ?? self::FILTRO_ALVO_TODOS;
+        $efeito["tipo_alvo"] = $efeito["tipo_alvo"] ?? $tipo_alvo_padrao;
+        $efeito["quant_alvo"] = $efeito["quant_alvo"] ?? 1;
+        $efeito["explicacao"] = $efeito["explicacao"] ?? ($habilidade["explicacao"] ?? "");
 
         $cores_efeitos = \Utils\Data::load("habilidades")["cores-efeitos"];
-        $efeito["bonus"]["cor"] = $cores_efeitos[$efeito["bonus"]["atr"]];
+        if (isset($efeito["bonus"]["atr"]) && isset($cores_efeitos[$efeito["bonus"]["atr"]])) {
+            $efeito["bonus"]["cor"] = $cores_efeitos[$efeito["bonus"]["atr"]];
+        }
 
-        if (self::is_efeito_valor_habilidade($efeito["bonus"]["atr"])) {
+        if (isset($efeito["bonus"]["atr"]) && self::is_efeito_valor_habilidade($efeito["bonus"]["atr"])) {
             $efeito["bonus"]["valor"] = self::habilidade_default_values($efeito["bonus"]["valor"]);
         }
         return $efeito;

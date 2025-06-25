@@ -4,7 +4,7 @@ function cron_reset_diario()
     global $connection;
     global $userDetails;
 
-    $ultimo_reset = $userDetails->tripulacao["ultimo_reset"]
+    $ultimo_reset = isset($userDetails->tripulacao["ultimo_reset"]) && $userDetails->tripulacao["ultimo_reset"]
         ? strtotime($userDetails->tripulacao["ultimo_reset"])
         : strtotime("-1 day", time());
     $reset_day_of_month = date("j", $ultimo_reset);
@@ -15,7 +15,7 @@ function cron_reset_diario()
     $current_day_of_month = date("j", $now);
     $current_month = date("n", $now);
     $current_year = date("Y", $now);
-    if (! $userDetails->tripulacao["ultimo_reset"]
+    if (! isset($userDetails->tripulacao["ultimo_reset"]) || ! $userDetails->tripulacao["ultimo_reset"]
         || $reset_day_of_month != $current_day_of_month
         || $reset_month != $current_month
         || $reset_year != $current_year) {
@@ -26,7 +26,7 @@ function cron_reset_diario()
                 iscas_usadas = 0,
                 ultimo_reset = CURDATE()
                 WHERE id = ?",
-            "i", [$userDetails->tripulacao["id"]]);
+            "i", [isset($userDetails->tripulacao["id"]) ? $userDetails->tripulacao["id"] : 0]);
     }
 
 }
