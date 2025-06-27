@@ -29,7 +29,7 @@
     <div class="row align-items-center justify-content-center mb2">
         @foreach ($habilidades as $habilidade)
             @php
-                $habilidade = array_merge($habilidade, $aprendidas[$habilidade['cod']] ?: []);
+                $habilidade = array_merge($habilidade, $aprendidas[$habilidade['cod']] ?? []);
             @endphp
             <div class="d-inline-block mx2 mb2">
                 <div>

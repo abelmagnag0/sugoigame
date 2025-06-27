@@ -33,15 +33,23 @@ class BuffTripulacao
             "i", array($this->userDetails->tripulacao["id"]))->fetch_all_array();
 
         $this->buffs_ativos = array();
-        foreach ($buffs as $buff) {
-            $this->buffs_ativos[] = array_merge($buff, $this->buffs_spec[$buff["buff_id"]]);
+        if ($buffs && is_array($buffs)) {
+            foreach ($buffs as $buff) {
+                if (isset($this->buffs_spec[$buff["buff_id"]])) {
+                    $this->buffs_ativos[] = array_merge($buff, $this->buffs_spec[$buff["buff_id"]]);
+                }
+            }
         }
 
         $buffs = $this->connection->run("SELECT * FROM tb_buff_global WHERE expiracao > ?",
             "i", array(atual_segundo()))->fetch_all_array();
 
-        foreach ($buffs as $buff) {
-            $this->buffs_ativos[] = array_merge($buff, $this->buffs_spec[$buff["buff_id"]]);
+        if ($buffs && is_array($buffs)) {
+            foreach ($buffs as $buff) {
+                if (isset($this->buffs_spec[$buff["buff_id"]])) {
+                    $this->buffs_ativos[] = array_merge($buff, $this->buffs_spec[$buff["buff_id"]]);
+                }
+            }
         }
 
         $this->connection->run("DELETE FROM tb_ilha_bonus_ativo WHERE expiracao < unix_timestamp()");
@@ -54,8 +62,12 @@ class BuffTripulacao
                 $this->userDetails->tripulacao["y"] + ALCANCE_BONUS_ILHA,
             ))->fetch_all_array();
 
-        foreach ($buffs as $buff) {
-            $this->buffs_ativos[] = array_merge($buff, $this->buffs_spec[$buff["buff_id"]]);
+        if ($buffs && is_array($buffs)) {
+            foreach ($buffs as $buff) {
+                if (isset($this->buffs_spec[$buff["buff_id"]])) {
+                    $this->buffs_ativos[] = array_merge($buff, $this->buffs_spec[$buff["buff_id"]]);
+                }
+            }
         }
     }
 
@@ -88,13 +100,17 @@ class BuffTripulacao
     {
         $acumulado = 0;
         $buffs = $this->connection->run("SELECT * FROM tb_tripulacao_buff WHERE tripulacao_id = ?", "i", $tripulacao_id)->fetch_all_array();
-        foreach ($buffs as $buff) {
-            $spec = $this->buffs_spec[$buff["buff_id"]];
-            if (isset($spec[$efeito])) {
-                if (isset($spec["nao_acumulativo"])) {
-                    $acumulado = $spec[$efeito];
-                } else {
-                    $acumulado += $spec[$efeito];
+        if ($buffs && is_array($buffs)) {
+            foreach ($buffs as $buff) {
+                if (isset($this->buffs_spec[$buff["buff_id"]])) {
+                    $spec = $this->buffs_spec[$buff["buff_id"]];
+                    if (isset($spec[$efeito])) {
+                        if (isset($spec["nao_acumulativo"])) {
+                            $acumulado = $spec[$efeito];
+                        } else {
+                            $acumulado += $spec[$efeito];
+                        }
+                    }
                 }
             }
         }

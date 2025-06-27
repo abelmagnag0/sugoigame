@@ -1,6 +1,13 @@
 <?php
+// Detectar ambiente automaticamente
 $env = 'dev';
-if ($_SERVER['HTTP_HOST'] != "localhost") {
+
+// Se estiver em container Docker
+if (getenv('DOCKER_ENV') === 'true' || file_exists('/.dockerenv')) {
+    $env = 'docker';
+}
+// Se não for localhost, usar produção
+elseif ($_SERVER['HTTP_HOST'] != "localhost") {
     $env = 'prod';
 }
 

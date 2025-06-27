@@ -7,6 +7,8 @@ class mywrap_result {
   private $bound_variables;
   private $results;
   private $statement;
+  private $columns;
+  private $cached;
 
   /**
    * Constructor -
@@ -28,7 +30,7 @@ class mywrap_result {
           $this->bound_variables[$column->name] =& $this->results[$column->name];
         }
       }
-      call_user_func_array(array($this->statement, 'bind_result'), $this->bound_variables);
+      call_user_func_array(array($this->statement, 'bind_result'), array_values($this->bound_variables));
       $meta->close();
     }
 }
@@ -82,7 +84,7 @@ class mywrap_result {
    */
   public function fetch_array() {
     $results = $this->fetch();
-    if ($results) {
+    if ($results && is_array($results)) {
       $row = array();
       foreach($results as $key=>$value) {
         $row[$key] = $value;
