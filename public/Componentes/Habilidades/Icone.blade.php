@@ -55,7 +55,7 @@
                 <span class="habilidade-etiqueta"
                     style="background-image: url({{ $etiqueta }});">
                 </span>
-            @endforeach ($espera)
+            @endforeach
         </span>
     @endif
     @if (isset($habilidade['quantidade']))
