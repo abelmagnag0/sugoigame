@@ -17,6 +17,20 @@ CROSS="❌"
 WARNING="⚠️"
 INFO="ℹ️"
 
+# Detectar comando Docker Compose
+detect_docker_compose() {
+    if command -v docker-compose &> /dev/null; then
+        echo "docker-compose"
+    elif docker compose version &> /dev/null; then
+        echo "docker compose"
+    else
+        return 1
+    fi
+}
+
+# Comando Docker Compose detectado
+DOCKER_COMPOSE=$(detect_docker_compose)
+
 print_header() {
     echo -e "${BLUE}"
     echo "╔══════════════════════════════════════════════╗"
@@ -76,7 +90,7 @@ check_websocket() {
 check_database() {
     echo -n "Checking Database... "
 
-    if docker-compose exec -T mysql mysql -u sugoigame_user -psugoigame_pass -e "SELECT 1;" sugoi_v2 > /dev/null 2>&1; then
+    if $DOCKER_COMPOSE exec -T mysql mysql -u sugoigame_user -psugoigame_pass -e "SELECT 1;" sugoi_v2 > /dev/null 2>&1; then
         echo -e "${GREEN}${CHECK}${NC}"
         return 0
     else
@@ -94,7 +108,7 @@ main() {
 
     # Verificar se containers estão rodando
     echo "=== Container Status ==="
-    docker-compose ps
+    $DOCKER_COMPOSE ps
     echo ""
 
     # Testes de conectividade
@@ -115,10 +129,10 @@ main() {
 
     # Verificar logs de erro
     echo "=== Recent Errors ==="
-    local error_count=$(docker-compose logs --since=10m 2>&1 | grep -i error | wc -l)
+    local error_count=$($DOCKER_COMPOSE logs --since=10m 2>&1 | grep -i error | wc -l)
     if [ $error_count -gt 0 ]; then
         echo -e "${WARNING} $error_count errors found in last 10 minutes"
-        docker-compose logs --since=10m 2>&1 | grep -i error | tail -5
+        $DOCKER_COMPOSE logs --since=10m 2>&1 | grep -i error | tail -5
     else
         echo -e "${CHECK} No recent errors found"
     fi
@@ -141,8 +155,15 @@ main() {
     fi
 }
 
+# Verificar se Docker Compose está disponível
+if [ -z "$DOCKER_COMPOSE" ]; then
+    echo -e "${RED}${CROSS} Docker Compose não está instalado!${NC}"
+    echo "Instale docker-compose ou use Docker com plugin compose"
+    exit 1
+fi
+
 # Verificar se Docker Compose está rodando
-if ! docker-compose ps > /dev/null 2>&1; then
+if ! $DOCKER_COMPOSE ps > /dev/null 2>&1; then
     echo -e "${RED}${CROSS} Docker Compose not running${NC}"
     echo "Run './manage.sh start' first"
     exit 1

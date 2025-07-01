@@ -27,6 +27,20 @@ WAVE="🌊"
 PROJECT_NAME="sugoigame"
 COMPOSE_FILE="docker-compose.yml"
 
+# Detectar comando Docker Compose
+detect_docker_compose() {
+    if command -v docker-compose &> /dev/null; then
+        echo "docker-compose"
+    elif docker compose version &> /dev/null; then
+        echo "docker compose"
+    else
+        return 1
+    fi
+}
+
+# Comando Docker Compose detectado
+DOCKER_COMPOSE=$(detect_docker_compose)
+
 # Funções auxiliares
 print_header() {
     echo -e "${BLUE}"
@@ -67,10 +81,13 @@ check_docker() {
         exit 1
     fi
 
-    if ! command -v docker-compose &> /dev/null; then
+    if [ -z "$DOCKER_COMPOSE" ]; then
         print_error "Docker Compose não está instalado!"
+        print_error "Instale docker-compose ou use Docker com plugin compose"
         exit 1
     fi
+
+    print_info "Usando: $DOCKER_COMPOSE"
 }
 
 # Verificar se os arquivos existem
@@ -84,7 +101,7 @@ check_files() {
 # Mostrar status dos containers
 show_status() {
     print_ship "Status dos containers:"
-    docker-compose ps
+    $DOCKER_COMPOSE ps
     echo ""
 
     print_ship "Uso de recursos:"
@@ -98,10 +115,10 @@ show_logs() {
 
     if [ -z "$service" ]; then
         print_ship "Logs de todos os serviços (últimas $lines linhas):"
-        docker-compose logs --tail=$lines -f
+        $DOCKER_COMPOSE logs --tail=$lines -f
     else
         print_ship "Logs do serviço $service (últimas $lines linhas):"
-        docker-compose logs --tail=$lines -f $service
+        $DOCKER_COMPOSE logs --tail=$lines -f $service
     fi
 }
 
@@ -121,13 +138,13 @@ start_app() {
 
     if [ "$env" = "prod" ]; then
         print_anchor "Modo PRODUÇÃO ativado"
-        docker-compose -f $COMPOSE_FILE up --build -d
+        $DOCKER_COMPOSE -f $COMPOSE_FILE up --build -d
     else
         print_anchor "Modo DESENVOLVIMENTO ativado"
         if [ "$build_flag" = "--build" ]; then
-            docker-compose up --build -d
+            $DOCKER_COMPOSE up --build -d
         else
-            docker-compose up -d
+            $DOCKER_COMPOSE up -d
         fi
     fi
 
@@ -138,7 +155,7 @@ start_app() {
     # Verificar se MySQL está pronto
     print_info "Verificando conexão com banco de dados..."
     for i in {1..30}; do
-        if docker-compose exec -T mysql mysqladmin ping -h localhost --silent; then
+        if $DOCKER_COMPOSE exec -T mysql mysqladmin ping -h localhost --silent; then
             break
         fi
         if [ $i -eq 30 ]; then
@@ -162,7 +179,7 @@ start_app() {
 # Parar aplicação
 stop_app() {
     print_ship "Parando Sugoi Game..."
-    docker-compose down
+    $DOCKER_COMPOSE down
     print_success "Aplicação parada com sucesso!"
 }
 
@@ -173,7 +190,7 @@ clean_all() {
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         print_ship "Limpando ambiente Docker..."
-        docker-compose down -v --rmi all --remove-orphans
+        $DOCKER_COMPOSE down -v --rmi all --remove-orphans
         docker system prune -f
         print_success "Ambiente limpo com sucesso!"
     else
@@ -186,7 +203,7 @@ backup_db() {
     local backup_name="backup_$(date +%Y%m%d_%H%M%S).sql"
     print_ship "Criando backup do banco de dados..."
 
-    docker-compose exec -T mysql mysqldump -u sugoigame_user -psugoigame_pass sugoi_v2 > $backup_name
+    $DOCKER_COMPOSE exec -T mysql mysqldump -u sugoigame_user -psugoigame_pass sugoi_v2 > $backup_name
 
     if [ $? -eq 0 ]; then
         print_success "Backup criado: $backup_name"
@@ -215,7 +232,7 @@ restore_db() {
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         print_ship "Restaurando backup $backup_file..."
-        docker-compose exec -T mysql mysql -u sugoigame_user -psugoigame_pass sugoi_v2 < $backup_file
+        $DOCKER_COMPOSE exec -T mysql mysql -u sugoigame_user -psugoigame_pass sugoi_v2 < $backup_file
         print_success "Backup restaurado com sucesso!"
     else
         print_info "Operação cancelada."
@@ -236,7 +253,7 @@ exec_cmd() {
     fi
 
     print_ship "Executando '$cmd' no serviço $service..."
-    docker-compose exec $service $cmd
+    $DOCKER_COMPOSE exec $service $cmd
 }
 
 # Mostrar ajuda
@@ -298,7 +315,7 @@ case "${1:-help}" in
         ;;
     "build")
         print_ship "Rebuilding containers..."
-        docker-compose build --no-cache
+        $DOCKER_COMPOSE build --no-cache
         print_success "Build concluído!"
         ;;
     "exec")
@@ -311,7 +328,7 @@ case "${1:-help}" in
             exit 1
         fi
         print_ship "Abrindo shell no serviço $2..."
-        docker-compose exec $2 bash || docker-compose exec $2 sh
+        $DOCKER_COMPOSE exec $2 bash || $DOCKER_COMPOSE exec $2 sh
         ;;
     "clean")
         clean_all
@@ -319,7 +336,7 @@ case "${1:-help}" in
     "update")
         print_ship "Atualizando aplicação..."
         git pull || print_warning "Git pull falhou, continuando..."
-        docker-compose build --no-cache
+        $DOCKER_COMPOSE build --no-cache
         start_app ${2:-dev}
         ;;
     "help"|"-h"|"--help")
